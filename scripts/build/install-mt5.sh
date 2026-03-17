@@ -94,7 +94,7 @@ run_gui wine reg add 'HKEY_CURRENT_USER\Software\Wine' /v Version /t REG_SZ /d w
 log "执行 MT5 无人值守安装"
 log "注意: mt5setup.exe 是引导安装器，仍可能联网下载 MT5 主体"
 if ! run_gui_with_timeout "${MT5_INSTALL_TIMEOUT}" \
-  bash -lc "wine \"${MT5_INSTALLER}\" /auto \"/path:C:\\Program Files\\MetaTrader 5\"" \
+  bash -lc "wine \"${MT5_INSTALLER}\" /auto" \
   >/tmp/mt5-install.log 2>&1; then
   status=$?
   if [[ "${status}" -eq 124 ]]; then
