@@ -23,7 +23,11 @@ export MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 MT5_LINUX_EXE="${WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe"
 MT5_LOG_DIR="/config/logs"
 MT5_LOG_FILE="${MT5_LOG_DIR}/mt5.log"
-PYTHON_MARKER="$(find "${WINEPREFIX}/drive_c" -type f -path '*/Python*/python.exe' | sort | head -n 1 || true)"
+PYTHON_MARKER=""
+
+if [[ -d "${WINEPREFIX}/drive_c" ]]; then
+  PYTHON_MARKER="$(find "${WINEPREFIX}/drive_c" -type f -path '*/Python*/python.exe' | sort | head -n 1 || true)"
+fi
 
 mkdir -p "${MT5_LOG_DIR}" || fail "无法创建日志目录: ${MT5_LOG_DIR}"
 
