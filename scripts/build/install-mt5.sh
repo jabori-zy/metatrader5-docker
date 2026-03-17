@@ -18,18 +18,25 @@ MT5_INSTALLER="/tmp/mt5setup.exe"
 export WINEPREFIX="${BUILD_WINEPREFIX}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEARCH="${WINEARCH:-win64}"
+export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-winemenubuilder.exe=d}"
 
 command -v wine >/dev/null 2>&1 || fail "wine 未安装"
 command -v xvfb-run >/dev/null 2>&1 || fail "xvfb-run 未安装"
 command -v curl >/dev/null 2>&1 || fail "curl 未安装"
 
-mkdir -p "${WINEPREFIX}"
+mkdir -p "$(dirname "${WINEPREFIX}")"
 
 if [[ ! -f "${WINEPREFIX}/system.reg" ]]; then
   log "初始化 Wine 前缀 ${WINEPREFIX}"
-  xvfb-run -a wineboot --init >/tmp/mt5-wineboot.log 2>&1 || {
+  rm -rf "${WINEPREFIX}"
+  xvfb-run -a wineboot -u >/tmp/mt5-wineboot.log 2>&1 || {
     cat /tmp/mt5-wineboot.log >&2
-    fail "wineboot 初始化失败"
+    log "wineboot 首次初始化失败，清理前缀后重试一次"
+    rm -rf "${WINEPREFIX}"
+    xvfb-run -a wineboot -u >/tmp/mt5-wineboot-retry.log 2>&1 || {
+      cat /tmp/mt5-wineboot-retry.log >&2
+      fail "wineboot 初始化失败"
+    }
   }
   wineserver -w
 fi
@@ -55,4 +62,3 @@ rm -f "${MT5_INSTALLER}"
 
 [[ -f "${MT5_LINUX_EXE}" ]] || fail "未找到 terminal64.exe: ${MT5_LINUX_EXE}"
 log "MT5 已安装: ${MT5_LINUX_EXE}"
-
