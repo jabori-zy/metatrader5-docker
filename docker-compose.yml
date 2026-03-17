@@ -1,0 +1,17 @@
+services:
+  mt5:
+    build:
+      context: .
+    image: metatrader5-docker:dev
+    platform: linux/amd64
+    container_name: mt5
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config:/config
+    env_file:
+      - .env
+
