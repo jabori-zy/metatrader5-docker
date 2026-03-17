@@ -4,9 +4,11 @@
 
 - Wine 进镜像
 - KasmVNC 提供浏览器桌面
-- MT5 在构建期无人值守安装
-- Windows Python 3.14 在构建期静默安装
-- 运行期只负责初始化可写前缀并启动 MT5
+- 镜像构建期预下载 Wine Gecko / Wine Mono
+- 镜像构建期预下载 MT5 和 Python 安装器
+- 首次容器启动时自动安装 MT5
+- 首次容器启动时自动安装 Windows Python 3.14
+- 后续启动只复用已有前缀并启动 MT5
 
 ## 前提
 
@@ -45,9 +47,14 @@ http://<ec2-public-ip>:3000
 
 ## 运行行为
 
-- 构建期会在模板 Wine 前缀里自动安装 MT5 和 Windows Python 3.14
-- 首次启动容器时，会把镜像内模板复制到 `/config/.wine`
-- 如果 `/config/.wine` 已存在，则跳过复制
+- 镜像构建阶段只安装 Wine 和运行依赖
+- 镜像构建阶段还会预下载：
+  - `mt5setup.exe`
+  - `python-3.14.0-amd64.exe`
+  - Wine Gecko
+  - Wine Mono
+- 首次启动容器时，会在 `/config/.wine` 内初始化 Wine 前缀并自动安装 MT5 与 Windows Python 3.14
+- 如果 `/config/.wine` 已存在，则会复用该前缀并跳过已完成的安装步骤
 - 启动脚本会直接运行：
 
 ```text
@@ -88,6 +95,12 @@ docker compose exec mt5 bash -lc 'export WINEPREFIX=/config/.wine; wine python -
 docker compose exec mt5 bash -lc 'export WINEPREFIX=/config/.wine; wine python -c "import MetaTrader5; print(MetaTrader5.__version__)"'
 ```
 
+检查预下载资源：
+
+```bash
+docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdepth 3 -type f | sort'
+```
+
 ## 仓库结构
 
 ```text
@@ -110,4 +123,5 @@ docker compose exec mt5 bash -lc 'export WINEPREFIX=/config/.wine; wine python -
 
 - 该版本只解决“流程跑通”，不处理正式持久化和多用户调度
 - KasmVNC 基础认证只适合开发/测试环境，不建议直接裸露到公网
-- 构建依赖外网下载官方安装器，若下载失败，`docker build` 会直接失败
+- 首次启动主要耗时来自 Wine 前缀初始化和离线安装步骤，不再依赖实时下载大文件
+- 如果离线安装资源缺失，启动脚本会直接报错，不会静默回退到网络下载
