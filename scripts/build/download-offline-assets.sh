@@ -11,7 +11,7 @@ fail() {
 }
 
 require_cmd() {
-  command -v "$1" >/dev/null 2>&1 || fail "缺少命令: $1"
+  command -v "$1" >/dev/null 2>&1 || fail "missing required command: $1"
 }
 
 get_app_ver() {
@@ -26,9 +26,9 @@ download_file() {
   local url="$1"
   local output="$2"
 
-  log "下载 $(basename "$output")"
-  curl -fL "$url" -o "$output" || fail "下载失败: $url"
-  [[ -s "$output" ]] || fail "下载文件为空: $output"
+  log "downloading $(basename "$output")"
+  curl -fL "$url" -o "$output" || fail "download failed: $url"
+  [[ -s "$output" ]] || fail "downloaded file is empty: $output"
 }
 
 require_cmd curl
@@ -43,15 +43,15 @@ PYTHON_SETUP_URL="${PYTHON_SETUP_URL:-https://www.python.org/ftp/python/3.9.13/p
 mkdir -p "$MT5_INSTALLER_DIR" "$WINE_GECKO_DIR" "$WINE_MONO_DIR"
 
 WINE_VER="$(wine --version | awk '{print $1}' | sed -E 's/^wine-//')"
-[[ -n "$WINE_VER" ]] || fail "无法解析 wine 版本"
-log "检测到 wine 版本: $WINE_VER"
+[[ -n "$WINE_VER" ]] || fail "failed to parse Wine version"
+log "detected Wine version: $WINE_VER"
 
 GECKO_VER="$(get_app_ver gecko "$WINE_VER")"
 MONO_VER="$(get_app_ver mono "$WINE_VER")"
-[[ -n "$GECKO_VER" ]] || fail "无法解析 Gecko 版本"
-[[ -n "$MONO_VER" ]] || fail "无法解析 Mono 版本"
-log "Gecko 版本: $GECKO_VER"
-log "Mono 版本: $MONO_VER"
+[[ -n "$GECKO_VER" ]] || fail "failed to parse Gecko version"
+[[ -n "$MONO_VER" ]] || fail "failed to parse Mono version"
+log "Gecko version: $GECKO_VER"
+log "Mono version: $MONO_VER"
 
 download_file "$MT5_SETUP_URL" "$MT5_INSTALLER_DIR/mt5setup.exe"
 download_file "$PYTHON_SETUP_URL" "$MT5_INSTALLER_DIR/python-3.9.13-amd64.exe"
@@ -62,4 +62,4 @@ download_file "https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${G
 download_file "https://dl.winehq.org/wine/wine-mono/${MONO_VER}/wine-mono-${MONO_VER}-x86.msi" \
   "$WINE_MONO_DIR/wine-mono-${MONO_VER}-x86.msi"
 
-log "离线资源已准备完成"
+log "offline assets ready"

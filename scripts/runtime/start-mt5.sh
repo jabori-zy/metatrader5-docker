@@ -11,6 +11,9 @@ fail() {
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "${SCRIPT_DIR}/../lib/common.sh"
+
 export WINEPREFIX="${WINEPREFIX:-/config/.wine}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-winemenubuilder.exe=d}"
@@ -29,44 +32,38 @@ cleanup_startup_marker() {
 }
 
 if [[ -d "${WINEPREFIX}/drive_c" ]]; then
-  if [[ -f "${WINEPREFIX}/drive_c/Program Files/Python39/python.exe" ]]; then
-    PYTHON_MARKER="${WINEPREFIX}/drive_c/Program Files/Python39/python.exe"
-  elif [[ -f "${WINEPREFIX}/drive_c/Program Files (x86)/Python39-32/python.exe" ]]; then
-    PYTHON_MARKER="${WINEPREFIX}/drive_c/Program Files (x86)/Python39-32/python.exe"
-  else
-    PYTHON_MARKER="$(find "${WINEPREFIX}/drive_c" -type f \( -path '*/Program Files*/Python39*/python.exe' -o -path '*/Program Files*/Python*/python.exe' \) | sort | head -n 1 || true)"
-  fi
+  PYTHON_MARKER="$(find_windows_python || true)"
 fi
 
-mkdir -p "${MT5_LOG_DIR}" || fail "无法创建日志目录: ${MT5_LOG_DIR}"
-touch "${MT5_LOG_FILE}" || fail "无法创建日志文件: ${MT5_LOG_FILE}"
+mkdir -p "${MT5_LOG_DIR}" || fail "failed to create log directory: ${MT5_LOG_DIR}"
+touch "${MT5_LOG_FILE}" || fail "failed to create log file: ${MT5_LOG_FILE}"
 exec > >(tee -a "${MT5_LOG_FILE}") 2>&1
 
-touch "${STARTUP_MARKER}" || fail "无法创建启动标记: ${STARTUP_MARKER}"
+touch "${STARTUP_MARKER}" || fail "failed to create startup marker: ${STARTUP_MARKER}"
 trap cleanup_startup_marker EXIT
 
 "${SCRIPT_DIR}/bootstrap-prefix.sh"
 
 if [[ ! -f "${MT5_LINUX_EXE}" ]]; then
-  log "未检测到 MT5，执行首次安装"
-  /scripts/build/install-mt5.sh || fail "MT5 首次安装失败，请检查 ${MT5_LOG_FILE}"
+  log "MT5 not detected, running first-time installation"
+  /scripts/build/install-mt5.sh || fail "MT5 first-time installation failed, check ${MT5_LOG_FILE}"
 fi
 
 if [[ -z "${PYTHON_MARKER}" ]]; then
-  log "未检测到 Windows Python，执行首次安装"
-  /scripts/build/install-python.sh || fail "Python 首次安装失败，请检查 ${MT5_LOG_FILE}"
+  log "Windows Python not detected, running first-time installation"
+  /scripts/build/install-python.sh || fail "Python first-time installation failed, check ${MT5_LOG_FILE}"
 fi
 
-[[ -f "${MT5_LINUX_EXE}" ]] || fail "未找到 terminal64.exe: ${MT5_LINUX_EXE}"
+[[ -f "${MT5_LINUX_EXE}" ]] || fail "terminal64.exe not found: ${MT5_LINUX_EXE}"
 
-log "启动 MetaTrader 5"
+log "starting MetaTrader 5"
 # shellcheck disable=SC2086
 wine "${MT5_LINUX_EXE}" /portable ${MT5_CMD_OPTIONS:-} >>"${MT5_LOG_FILE}" 2>&1 &
 MT5_PID=$!
 
 for _ in $(seq 1 30); do
   if pgrep -fa terminal64.exe >/dev/null; then
-    log "MetaTrader 5 已启动"
+    log "MetaTrader 5 started"
     cleanup_startup_marker
     wait "${MT5_PID}"
     exit $?
@@ -74,4 +71,4 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 
-fail "MetaTrader 5 进程未成功启动，请检查 ${MT5_LOG_FILE}"
+fail "MetaTrader 5 process failed to start, check ${MT5_LOG_FILE}"

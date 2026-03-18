@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "${SCRIPT_DIR}/../lib/common.sh"
+
 log() {
   printf '[build][mt5] %s\n' "$*"
 }
@@ -8,28 +12,6 @@ log() {
 fail() {
   printf '[build][mt5][error] %s\n' "$*" >&2
   exit 1
-}
-
-run_gui() {
-  if [[ -n "${DISPLAY:-}" ]]; then
-    "$@"
-    return
-  fi
-
-  command -v xvfb-run >/dev/null 2>&1 || fail "未检测到 DISPLAY，且 xvfb-run 未安装"
-  xvfb-run -a "$@"
-}
-
-wait_for_wineserver() {
-  local timeout_secs="${WINE_WAIT_TIMEOUT:-60}"
-
-  if timeout "${timeout_secs}" wineserver -w; then
-    return
-  fi
-
-  log "wineserver 等待超时，强制结束残留进程"
-  wineserver -k >/dev/null 2>&1 || true
-  sleep 2
 }
 
 BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/config/.wine}}"
@@ -51,45 +33,45 @@ export GST_PLUGIN_SYSTEM_PATH_1_0="${GST_PLUGIN_SYSTEM_PATH_1_0:-}"
 export GST_PLUGIN_PATH_1_0="${GST_PLUGIN_PATH_1_0:-}"
 export GST_REGISTRY="${GST_REGISTRY:-/tmp/gstreamer-registry.dat}"
 
-command -v wine >/dev/null 2>&1 || fail "wine 未安装"
-command -v timeout >/dev/null 2>&1 || fail "timeout 未安装"
+command -v wine >/dev/null 2>&1 || fail "wine is not installed"
+command -v timeout >/dev/null 2>&1 || fail "timeout is not installed"
 
 mkdir -p "$(dirname "${WINEPREFIX}")"
-[[ -f "${MT5_INSTALLER}" ]] || fail "缺少预下载 MT5 安装器: ${MT5_INSTALLER}"
-[[ -d "${WINE_GECKO_DIR}" ]] || fail "缺少 Gecko 离线目录: ${WINE_GECKO_DIR}"
-[[ -d "${WINE_MONO_DIR}" ]] || fail "缺少 Mono 离线目录: ${WINE_MONO_DIR}"
-[[ -n "${MONO_INSTALLER}" ]] || fail "缺少 Mono 安装器: ${WINE_MONO_DIR}"
+[[ -f "${MT5_INSTALLER}" ]] || fail "pre-downloaded MT5 installer not found: ${MT5_INSTALLER}"
+[[ -d "${WINE_GECKO_DIR}" ]] || fail "Gecko offline directory not found: ${WINE_GECKO_DIR}"
+[[ -d "${WINE_MONO_DIR}" ]] || fail "Mono offline directory not found: ${WINE_MONO_DIR}"
+[[ -n "${MONO_INSTALLER}" ]] || fail "Mono installer not found in: ${WINE_MONO_DIR}"
 
 if [[ ! -f "${WINEPREFIX}/system.reg" ]]; then
-  log "初始化 Wine 前缀 ${WINEPREFIX}"
+  log "initializing Wine prefix ${WINEPREFIX}"
   rm -rf "${WINEPREFIX}"
   run_gui winecfg -v=win10 >/tmp/mt5-winecfg-init.log 2>&1 || {
     cat /tmp/mt5-winecfg-init.log >&2
-    fail "winecfg 初始化失败"
+    fail "winecfg initialization failed"
   }
   wait_for_wineserver
 fi
 
-log "设置 Wine 为 Windows 10 模式"
+log "setting Wine to Windows 10 mode"
 run_gui winecfg -v=win10 >/tmp/mt5-winver.log 2>&1 || {
   cat /tmp/mt5-winver.log >&2
-  fail "设置 Wine Windows 版本失败"
+  fail "failed to set Wine Windows version"
 }
 wait_for_wineserver
 
 if [[ ! -d "${MONO_MARKER_DIR}" ]]; then
-  log "安装 Wine Mono"
+  log "installing Wine Mono"
   run_gui wine msiexec /i "${MONO_INSTALLER}" /qn >/tmp/mt5-mono.log 2>&1 || {
     cat /tmp/mt5-mono.log >&2
-    fail "Wine Mono 安装失败"
+    fail "Wine Mono installation failed"
   }
   wait_for_wineserver
 else
-  log "Wine Mono 已安装，跳过"
+  log "Wine Mono already installed, skipping"
 fi
 
-log "执行 MT5 无人值守安装"
-log "注意: mt5setup.exe 是引导安装器，仍可能联网下载 MT5 主体"
+log "running MT5 unattended installation"
+log "note: mt5setup.exe is a bootstrap installer and may still download MT5 components from the network"
 rm -f /tmp/mt5-install.log
 run_gui bash -lc "wine \"${MT5_INSTALLER}\" /auto" >/tmp/mt5-install.log 2>&1 &
 INSTALLER_PID=$!
@@ -106,7 +88,7 @@ while (( SECONDS - START_TIME < MT5_INSTALL_TIMEOUT )); do
     wait "${INSTALLER_PID}"
     INSTALLER_STATUS=$?
     set -e
-    log "MT5 安装器进程已退出，返回码: ${INSTALLER_STATUS}，继续等待安装结果"
+    log "MT5 installer process exited with code ${INSTALLER_STATUS}, waiting for installation to complete"
     INSTALLER_EXIT_REPORTED=1
   fi
 
@@ -116,15 +98,15 @@ done
 if [[ ! -f "${MT5_LINUX_EXE}" ]]; then
   {
     echo
-    echo "[build][mt5][error] MT5 安装超时 (${MT5_INSTALL_TIMEOUT}s)"
+    echo "[build][mt5][error] MT5 installation timed out (${MT5_INSTALL_TIMEOUT}s)"
     ps -ef | grep -Ei 'mt5setup|terminal64|wine|winedevice|wineserver' | grep -v grep || true
   } >>/tmp/mt5-install.log
   wineserver -k >/dev/null 2>&1 || true
   cat /tmp/mt5-install.log >&2
-  fail "MT5 无人值守安装失败"
+  fail "MT5 unattended installation failed"
 fi
 
 wait_for_wineserver
 
-[[ -f "${MT5_LINUX_EXE}" ]] || fail "未找到 terminal64.exe: ${MT5_LINUX_EXE}"
-log "MT5 已安装: ${MT5_LINUX_EXE}"
+[[ -f "${MT5_LINUX_EXE}" ]] || fail "terminal64.exe not found: ${MT5_LINUX_EXE}"
+log "MT5 installed: ${MT5_LINUX_EXE}"
