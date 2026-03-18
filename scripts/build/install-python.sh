@@ -36,7 +36,7 @@ BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/config/.wine}}"
 MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 WINE_GECKO_DIR="${WINE_GECKO_DIR:-/opt/wine-offline/gecko}"
 WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"
-PYTHON_INSTALLER="${MT5_INSTALLER_DIR}/python-3.14.0-amd64.exe"
+PYTHON_INSTALLER="${MT5_INSTALLER_DIR}/python-3.9.13.exe"
 
 export WINEPREFIX="${BUILD_WINEPREFIX}"
 export WINEDEBUG="${WINEDEBUG:--all}"
