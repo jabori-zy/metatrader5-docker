@@ -85,6 +85,16 @@ COPY --chmod=755 scripts/runtime/start-mt5.sh /scripts/runtime/start-mt5.sh
 COPY --chmod=755 scripts/runtime/healthcheck.sh /scripts/runtime/healthcheck.sh
 COPY root /
 
+RUN chmod 755 /scripts /scripts/build /scripts/runtime /scripts/lib \
+    && chmod 755 /scripts/build/download-offline-assets.sh \
+        /scripts/build/install-mt5.sh \
+        /scripts/build/install-python.sh \
+        /scripts/build/preinstall-runtime.sh \
+        /scripts/runtime/bootstrap-prefix.sh \
+        /scripts/runtime/start-mt5.sh \
+        /scripts/runtime/healthcheck.sh \
+    && chmod 644 /scripts/lib/common.sh
+
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
