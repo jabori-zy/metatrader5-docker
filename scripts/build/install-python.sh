@@ -33,8 +33,8 @@ wait_for_wineserver() {
 }
 
 find_windows_python() {
-  local preferred_32="${WINEPREFIX}/drive_c/Program Files (x86)/Python314-32/python.exe"
-  local preferred="${WINEPREFIX}/drive_c/Program Files/Python314/python.exe"
+  local preferred="${WINEPREFIX}/drive_c/Program Files/Python39/python.exe"
+  local preferred_32="${WINEPREFIX}/drive_c/Program Files (x86)/Python39-32/python.exe"
 
   if [[ -f "${preferred_32}" ]]; then
     printf '%s\n' "${preferred_32}"
@@ -46,14 +46,14 @@ find_windows_python() {
     return
   fi
 
-  find "${WINEPREFIX}/drive_c" -type f \( -path '*/Program Files*/Python314*/python.exe' -o -path '*/Program Files*/Python*/python.exe' \) | sort | head -n 1
+  find "${WINEPREFIX}/drive_c" -type f \( -path '*/Program Files*/Python39*/python.exe' -o -path '*/Program Files*/Python*/python.exe' \) | sort | head -n 1
 }
 
 BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/config/.wine}}"
 MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 WINE_GECKO_DIR="${WINE_GECKO_DIR:-/opt/wine-offline/gecko}"
 WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"
-PYTHON_INSTALLER="${MT5_INSTALLER_DIR}/python-3.14.0.exe"
+PYTHON_INSTALLER="${MT5_INSTALLER_DIR}/python-3.9.13-amd64.exe"
 
 export WINEPREFIX="${BUILD_WINEPREFIX}"
 export WINEDEBUG="${WINEDEBUG:--all}"

@@ -8,7 +8,7 @@
 - 镜像构建期预下载 Wine Gecko / Wine Mono
 - 镜像构建期预下载 MT5 和 Python 安装器
 - 首次容器启动时自动安装 MT5
-- 首次容器启动时自动安装 Windows Python 3.14.0 32-bit
+- 首次容器启动时自动安装 Windows Python 3.9.13 64-bit
 - 后续启动只复用已有前缀并启动 MT5
 
 ## 前提
@@ -52,13 +52,13 @@ http://<ec2-public-ip>:3000
 - 镜像构建阶段固定安装 `winehq-stable 10.0.0.0~bookworm-1`
 - 镜像构建阶段还会预下载：
   - `mt5setup.exe`
-  - `python-3.14.0.exe`
+  - `python-3.9.13-amd64.exe`
   - Wine Gecko
   - Wine Mono
 - 首次启动容器时，会在 `/config/.wine` 内初始化 Wine 前缀
 - 首次启动容器时，会先设置 Wine 为 Windows 10 并显式安装 Wine Mono
 - 首次启动容器时，会自动执行 `mt5setup.exe /auto`
-- 完成 MT5 无人值守安装后，脚本才会继续安装 Windows Python 3.14.0 32-bit
+- 完成 MT5 无人值守安装后，脚本才会继续安装 Windows Python 3.9.13 64-bit
 - 如果 `/config/.wine` 已存在，则会复用该前缀并跳过已完成的安装步骤
 - 启动脚本会直接运行：
 
