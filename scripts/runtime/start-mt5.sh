@@ -11,8 +11,6 @@ fail() {
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-"${SCRIPT_DIR}/bootstrap-prefix.sh"
-
 export WINEPREFIX="${WINEPREFIX:-/config/.wine}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-winemenubuilder.exe=d}"
@@ -36,15 +34,19 @@ if [[ -d "${WINEPREFIX}/drive_c" ]]; then
 fi
 
 mkdir -p "${MT5_LOG_DIR}" || fail "无法创建日志目录: ${MT5_LOG_DIR}"
+touch "${MT5_LOG_FILE}" || fail "无法创建日志文件: ${MT5_LOG_FILE}"
+exec > >(tee -a "${MT5_LOG_FILE}") 2>&1
+
+"${SCRIPT_DIR}/bootstrap-prefix.sh"
 
 if [[ ! -f "${MT5_LINUX_EXE}" ]]; then
   log "未检测到 MT5，执行首次安装"
-  /scripts/build/install-mt5.sh >>"${MT5_LOG_FILE}" 2>&1 || fail "MT5 首次安装失败，请检查 ${MT5_LOG_FILE}"
+  /scripts/build/install-mt5.sh || fail "MT5 首次安装失败，请检查 ${MT5_LOG_FILE}"
 fi
 
 if [[ -z "${PYTHON_MARKER}" ]]; then
   log "未检测到 Windows Python，执行首次安装"
-  /scripts/build/install-python.sh >>"${MT5_LOG_FILE}" 2>&1 || fail "Python 首次安装失败，请检查 ${MT5_LOG_FILE}"
+  /scripts/build/install-python.sh || fail "Python 首次安装失败，请检查 ${MT5_LOG_FILE}"
 fi
 
 [[ -f "${MT5_LINUX_EXE}" ]] || fail "未找到 terminal64.exe: ${MT5_LINUX_EXE}"
