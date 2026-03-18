@@ -14,7 +14,7 @@ fail() {
   exit 1
 }
 
-BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/config/.wine}}"
+BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/opt/mt5-prefix}}"
 MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 WINE_GECKO_DIR="${WINE_GECKO_DIR:-/opt/wine-offline/gecko}"
 WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"
@@ -24,7 +24,7 @@ export WINEPREFIX="${BUILD_WINEPREFIX}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEARCH="${WINEARCH:-win64}"
 export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-winemenubuilder.exe=d}"
-export DISPLAY="${DISPLAY:-:1}"
+export DISPLAY="${DISPLAY:-}"
 export GST_PLUGIN_SYSTEM_PATH_1_0="${GST_PLUGIN_SYSTEM_PATH_1_0:-}"
 export GST_PLUGIN_PATH_1_0="${GST_PLUGIN_PATH_1_0:-}"
 export GST_REGISTRY="${GST_REGISTRY:-/tmp/gstreamer-registry.dat}"

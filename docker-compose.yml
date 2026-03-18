@@ -4,14 +4,14 @@ services:
       context: .
     image: metatrader5-docker:dev
     platform: linux/amd64
-    container_name: mt5
     restart: unless-stopped
     security_opt:
       - seccomp:unconfined
     ports:
       - "3000:3000"
-    volumes:
-      - ./config:/config
-    env_file:
-      - .env
-
+    environment:
+      CUSTOM_USER: ${CUSTOM_USER}
+      PASSWORD: ${PASSWORD}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      MT5_CMD_OPTIONS: ${MT5_CMD_OPTIONS:-}

@@ -24,7 +24,8 @@ ENV TITLE=MetaTrader5 \
     WINEDEBUG=-all \
     WINEARCH=win64 \
     WINEDLLOVERRIDES=winemenubuilder.exe=d \
-    WINEPREFIX=/config/.wine \
+    WINEPREFIX=/opt/mt5-prefix \
+    PREINSTALLED_WINEPREFIX=/opt/mt5-prefix \
     MT5_INSTALLER_DIR=/opt/installers \
     WINE_GECKO_DIR=/opt/wine-offline/gecko \
     WINE_MONO_DIR=/opt/wine-offline/mono \
@@ -64,26 +65,27 @@ RUN dpkg --add-architecture i386 \
         "wine-stable-i386:i386=${WINE_VERSION}" \
     && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen \
-    && mkdir -p /opt/installers /opt/wine-offline/gecko /opt/wine-offline/mono /config \
+    && mkdir -p /opt/installers /opt/wine-offline/gecko /opt/wine-offline/mono /opt/mt5-prefix /config \
     && mkdir -p /usr/share/wine \
     && rm -rf /usr/share/wine/gecko /usr/share/wine/mono \
     && ln -sfn /opt/wine-offline/gecko /usr/share/wine/gecko \
     && ln -sfn /opt/wine-offline/mono /usr/share/wine/mono \
     && rm -rf /var/lib/apt/lists/*
 
-COPY scripts /scripts
+COPY --chmod=644 scripts/lib/common.sh /scripts/lib/common.sh
+COPY --chmod=755 scripts/build/download-offline-assets.sh /scripts/build/download-offline-assets.sh
+COPY --chmod=755 scripts/build/install-mt5.sh /scripts/build/install-mt5.sh
+COPY --chmod=755 scripts/build/install-python.sh /scripts/build/install-python.sh
+COPY --chmod=755 scripts/build/preinstall-runtime.sh /scripts/build/preinstall-runtime.sh
+
+RUN /scripts/build/preinstall-runtime.sh
+
+COPY --chmod=755 scripts/runtime/bootstrap-prefix.sh /scripts/runtime/bootstrap-prefix.sh
+COPY --chmod=755 scripts/runtime/start-mt5.sh /scripts/runtime/start-mt5.sh
+COPY --chmod=755 scripts/runtime/healthcheck.sh /scripts/runtime/healthcheck.sh
 COPY root /
 
-RUN chmod +x /scripts/build/install-mt5.sh \
-    /scripts/build/download-offline-assets.sh \
-    /scripts/build/install-python.sh \
-    /scripts/runtime/bootstrap-prefix.sh \
-    /scripts/runtime/start-mt5.sh \
-    /scripts/runtime/healthcheck.sh \
-    && /scripts/build/download-offline-assets.sh
-
 EXPOSE 3000
-VOLUME /config
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
   CMD /scripts/runtime/healthcheck.sh

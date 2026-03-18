@@ -1,15 +1,12 @@
-# MT5 Docker V1
+# MT5 Docker V2
 
-在 Ubuntu EC2 上构建一个单用户、单容器的 MetaTrader 5 运行环境：
+一个预装、无状态、单用户的 MetaTrader 5 容器镜像：
 
-- Wine 进镜像
-- KasmVNC 提供浏览器桌面
-- Docker 固定使用 `winehq-stable 10.0.0.0~bookworm-1`
-- 镜像构建期预下载 Wine Gecko / Wine Mono
-- 镜像构建期预下载 MT5 和 Python 安装器
-- 首次容器启动时自动安装 MT5
-- 首次容器启动时自动安装 Windows Python 3.9.13 64-bit
-- 后续启动只复用已有前缀并启动 MT5
+- 1 用户 = 1 容器 = 1 Wine prefix = 1 MT5 = 1 KasmVNC 会话
+- Wine、MT5、Windows Python 和 `MetaTrader5` Python 包都在镜像构建期预装
+- 运行期不再挂载或持久化 Wine prefix
+- 容器删除后，本地运行时数据、缓存和日志都会丢失
+- 用户登录信息、业务配置等应由外部数据库或调度层管理
 
 ## 前提
 
@@ -44,29 +41,29 @@ docker compose up -d
 http://<ec2-public-ip>:3000
 ```
 
-使用 `.env` 中的 `CUSTOM_USER` 和 `PASSWORD` 登录。
+使用 `.env` 中的 `CUSTOM_USER` 和 `PASSWORD` 登录 KasmVNC。
 
-## 运行行为
+## 运行模型
 
-- 镜像构建阶段只安装 Wine 和运行依赖
-- 镜像构建阶段固定安装 `winehq-stable 10.0.0.0~bookworm-1`
-- 镜像构建阶段还会预下载：
-  - `mt5setup.exe`
-  - `python-3.9.13-amd64.exe`
-  - Wine Gecko
-  - Wine Mono
-- 首次启动容器时，会在 `/config/.wine` 内初始化 Wine 前缀
-- 首次启动容器时，会先设置 Wine 为 Windows 10 并显式安装 Wine Mono
-- 首次启动容器时，会自动执行 `mt5setup.exe /auto`
-- 完成 MT5 无人值守安装后，脚本才会继续安装 Windows Python 3.9.13 64-bit
-- 如果 `/config/.wine` 已存在，则会复用该前缀并跳过已完成的安装步骤
+- 预装 Wine prefix 固定在镜像内的 `/opt/mt5-prefix`
+- 容器启动时不会再执行 MT5 或 Python 首次安装
 - 启动脚本会直接运行：
 
 ```text
 wine "C:\Program Files\MetaTrader 5\terminal64.exe" /portable
 ```
 
-如果设置了 `MT5_CMD_OPTIONS`，会追加到启动命令后面。
+- 如果设置了 `MT5_CMD_OPTIONS`，会追加到启动命令后面
+- 运行期日志只输出到容器标准输出，使用 `docker logs` 查看
+- 本仓库当前不实现 HTTP 服务，也不在容器内读取数据库
+- 未来如需接入用户配置，建议由外部调度层按用户拉起容器，并通过环境变量或 secrets 注入配置引用
+
+## 多用户部署方式
+
+- 不要在单个容器里运行多个 Wine 环境
+- 正确方式是在同一台 Docker 主机上运行多个此类容器
+- 每个容器承载一个用户实例
+- 由于 Wine prefix 已预装到镜像层，多容器会共享镜像层，而不是每个用户复制一份 2.8GB 的持久化目录
 
 ## 常用命令
 
@@ -88,19 +85,25 @@ docker compose exec mt5 bash
 docker compose exec mt5 pgrep -fa terminal64.exe
 ```
 
+检查预装 MT5：
+
+```bash
+docker compose exec mt5 test -f '/opt/mt5-prefix/drive_c/Program Files/MetaTrader 5/terminal64.exe'
+```
+
 检查 Windows Python：
 
 ```bash
-docker compose exec mt5 bash -lc 'export WINEPREFIX=/config/.wine; wine python --version'
+docker compose exec mt5 bash -lc 'export WINEPREFIX=/opt/mt5-prefix; wine python --version'
 ```
 
-验证 MetaTrader5 包：
+验证 `MetaTrader5` 包：
 
 ```bash
-docker compose exec mt5 bash -lc 'export WINEPREFIX=/config/.wine; wine python -c "import MetaTrader5; print(MetaTrader5.__version__)"'
+docker compose exec mt5 bash -lc 'export WINEPREFIX=/opt/mt5-prefix; wine python -c "import MetaTrader5; print(MetaTrader5.__version__)"'
 ```
 
-检查预下载资源：
+检查离线资源：
 
 ```bash
 docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdepth 3 -type f | sort'
@@ -116,8 +119,12 @@ docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdep
 ├── root/defaults/autostart
 └── scripts
     ├── build
+    │   ├── download-offline-assets.sh
     │   ├── install-mt5.sh
-    │   └── install-python.sh
+    │   ├── install-python.sh
+    │   └── preinstall-runtime.sh
+    ├── lib
+    │   └── common.sh
     └── runtime
         ├── bootstrap-prefix.sh
         ├── healthcheck.sh
@@ -126,8 +133,8 @@ docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdep
 
 ## 注意事项
 
-- 该版本只解决“流程跑通”，不处理正式持久化和多用户调度
+- 构建期会完成完整预装，因此镜像构建时间更长，镜像体积也更大
+- `mt5setup.exe` 仍然是官方引导安装器，构建阶段依然可能联网下载 MT5 主体
+- 运行时不持久化本地数据，因此容器重建后不会保留运行期产生的文件
+- `docker-compose.yml` 只是本地单实例 demo；生产环境应由外部编排系统按用户拉起多个容器
 - KasmVNC 基础认证只适合开发/测试环境，不建议直接裸露到公网
-- 首次启动主要耗时来自 Wine 前缀初始化和离线安装步骤
-- 虽然镜像内已经预下载 `mt5setup.exe`，但它仍是官方引导安装器，安装阶段依然可能联网下载 MT5 主体
-- 如果离线安装资源缺失，启动脚本会直接报错，不会静默回退到网络下载

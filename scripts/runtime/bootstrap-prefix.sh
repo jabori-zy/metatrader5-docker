@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "${SCRIPT_DIR}/../lib/common.sh"
+
 log() {
   printf '[runtime][bootstrap] %s\n' "$*"
 }
@@ -10,29 +14,15 @@ fail() {
   exit 1
 }
 
-RUNTIME_WINEPREFIX="${WINEPREFIX:-/config/.wine}"
-RUNTIME_PARENT="$(dirname "${RUNTIME_WINEPREFIX}")"
+RUNTIME_WINEPREFIX="/opt/mt5-prefix"
 MT5_LINUX_EXE="${RUNTIME_WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe"
-mkdir -p "${RUNTIME_PARENT}" || fail "failed to create parent directory: ${RUNTIME_PARENT}"
-[[ -w "${RUNTIME_PARENT}" ]] || fail "parent directory is not writable: ${RUNTIME_PARENT}"
 
-if [[ ! -d "${RUNTIME_WINEPREFIX}" ]]; then
-  log "creating Wine prefix directory for the first time: ${RUNTIME_WINEPREFIX}"
-  mkdir -p "${RUNTIME_WINEPREFIX}" || fail "failed to create Wine prefix directory"
-else
-  log "Wine prefix already exists, skipping initialization"
-fi
+export WINEPREFIX="${RUNTIME_WINEPREFIX}"
 
-[[ -d "${RUNTIME_WINEPREFIX}" ]] || fail "Wine prefix does not exist: ${RUNTIME_WINEPREFIX}"
-[[ -w "${RUNTIME_WINEPREFIX}" ]] || fail "Wine prefix is not writable: ${RUNTIME_WINEPREFIX}"
+[[ -d "${RUNTIME_WINEPREFIX}" ]] || fail "preinstalled Wine prefix does not exist: ${RUNTIME_WINEPREFIX}"
+[[ -f "${MT5_LINUX_EXE}" ]] || fail "terminal64.exe not found: ${MT5_LINUX_EXE}"
 
-touch "${RUNTIME_WINEPREFIX}/.write-test" || fail "Wine prefix write test failed: ${RUNTIME_WINEPREFIX}"
-rm -f "${RUNTIME_WINEPREFIX}/.write-test"
+PYTHON_EXE="$(find_windows_python || true)"
+[[ -n "${PYTHON_EXE}" ]] || fail "Windows Python was not found in preinstalled prefix"
 
-if [[ -f "${MT5_LINUX_EXE}" ]]; then
-  log "existing MT5 installation detected"
-else
-  log "no MT5 found in current prefix, first-time installation will run at startup"
-fi
-
-log "Wine prefix is ready"
+log "preinstalled Wine prefix is ready"
