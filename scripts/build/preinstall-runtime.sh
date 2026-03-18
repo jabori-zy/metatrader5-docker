@@ -29,13 +29,10 @@ rm -rf "${WINEPREFIX}"
 log "downloading offline assets"
 "${SCRIPT_DIR}/download-offline-assets.sh"
 
-log "installing MetaTrader 5 into ${WINEPREFIX}"
-"${SCRIPT_DIR}/install-mt5.sh"
-
 log "installing Windows Python into ${WINEPREFIX}"
 "${SCRIPT_DIR}/install-python.sh"
 
-[[ -f "${WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe" ]] \
-  || fail "terminal64.exe not found after preinstall"
+PYTHON_EXE="$(find "${WINEPREFIX}/drive_c" -type f -path '*/Program Files*/Python*/python.exe' | sort | head -n 1 || true)"
+[[ -n "${PYTHON_EXE}" ]] || fail "python.exe not found after preinstall"
 
 log "preinstalled runtime is ready"

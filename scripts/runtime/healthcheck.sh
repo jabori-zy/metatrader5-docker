@@ -3,6 +3,12 @@ set -euo pipefail
 
 WINEPREFIX="/opt/mt5-prefix"
 MT5_LINUX_EXE="${WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe"
+STARTUP_MARKER="/config/.mt5-startup-in-progress"
+
+if [[ -f "${STARTUP_MARKER}" ]]; then
+  printf '[healthcheck] first-time startup initialization in progress, skipping health check\n'
+  exit 0
+fi
 
 if [[ ! -d "${WINEPREFIX}" ]]; then
   printf '[healthcheck] preinstalled WINEPREFIX does not exist: %s\n' "${WINEPREFIX}" >&2

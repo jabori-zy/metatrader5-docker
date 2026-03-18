@@ -1,9 +1,10 @@
 # MT5 Docker V2
 
-一个预装、无状态、单用户的 MetaTrader 5 容器镜像：
+一个单用户、无状态、启动时安装 MT5 的 MetaTrader 5 容器镜像：
 
 - 1 用户 = 1 容器 = 1 Wine prefix = 1 MT5 = 1 KasmVNC 会话
-- Wine、MT5、Windows Python 和 `MetaTrader5` Python 包都在镜像构建期预装
+- Wine、Windows Python 和 `MetaTrader5` Python 包在镜像构建期预装
+- MT5 在容器首次启动时安装到镜像内预准备好的 Wine prefix
 - 运行期不再挂载或持久化 Wine prefix
 - 容器删除后，本地运行时数据、缓存和日志都会丢失
 - 用户登录信息、业务配置等应由外部数据库或调度层管理
@@ -45,8 +46,9 @@ http://<ec2-public-ip>:3000
 
 ## 运行模型
 
-- 预装 Wine prefix 固定在镜像内的 `/opt/mt5-prefix`
-- 容器启动时不会再执行 MT5 或 Python 首次安装
+- 预装基础 Wine prefix 固定在镜像内的 `/opt/mt5-prefix`
+- 容器启动时如果未检测到 `terminal64.exe`，会执行 MT5 首次安装
+- Windows Python 和 `MetaTrader5` Python 包在构建期已经预装到同一个 prefix
 - 启动脚本会直接运行：
 
 ```text
@@ -54,7 +56,7 @@ wine "C:\Program Files\MetaTrader 5\terminal64.exe" /portable
 ```
 
 - 如果设置了 `MT5_CMD_OPTIONS`，会追加到启动命令后面
-- 运行期日志只输出到容器标准输出，使用 `docker logs` 查看
+- 运行期日志会同时输出到容器标准输出和 `/config/logs/mt5.log`
 - 本仓库当前不实现 HTTP 服务，也不在容器内读取数据库
 - 未来如需接入用户配置，建议由外部调度层按用户拉起容器，并通过环境变量或 secrets 注入配置引用
 
@@ -63,7 +65,7 @@ wine "C:\Program Files\MetaTrader 5\terminal64.exe" /portable
 - 不要在单个容器里运行多个 Wine 环境
 - 正确方式是在同一台 Docker 主机上运行多个此类容器
 - 每个容器承载一个用户实例
-- 由于 Wine prefix 已预装到镜像层，多容器会共享镜像层，而不是每个用户复制一份 2.8GB 的持久化目录
+- 由于基础环境已预装到镜像层，多容器会共享镜像层；每个容器仍会在首次启动时各自完成 MT5 安装
 
 ## 常用命令
 
@@ -85,7 +87,7 @@ docker compose exec mt5 bash
 docker compose exec mt5 pgrep -fa terminal64.exe
 ```
 
-检查预装 MT5：
+检查 MT5 是否已安装：
 
 ```bash
 docker compose exec mt5 test -f '/opt/mt5-prefix/drive_c/Program Files/MetaTrader 5/terminal64.exe'
@@ -133,8 +135,8 @@ docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdep
 
 ## 注意事项
 
-- 构建期会完成完整预装，因此镜像构建时间更长，镜像体积也更大
-- `mt5setup.exe` 仍然是官方引导安装器，构建阶段依然可能联网下载 MT5 主体
+- 构建期会完成环境和 Python 预装，因此镜像构建时间更长，镜像体积也更大
+- `mt5setup.exe` 仍然是官方引导安装器，首次启动安装 MT5 时依然可能联网下载 MT5 主体
 - 运行时不持久化本地数据，因此容器重建后不会保留运行期产生的文件
 - `docker-compose.yml` 只是本地单实例 demo；生产环境应由外部编排系统按用户拉起多个容器
 - KasmVNC 基础认证只适合开发/测试环境，不建议直接裸露到公网
