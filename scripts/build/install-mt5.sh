@@ -92,7 +92,9 @@ while (( SECONDS - START_TIME < MT5_INSTALL_TIMEOUT )); do
     INSTALLER_EXIT_REPORTED=1
   fi
 
-  sleep 5
+  ELAPSED=$((SECONDS - START_TIME))
+  log "MT5 installation still in progress (${ELAPSED}s elapsed, waiting for ${MT5_LINUX_EXE})"
+  sleep 2
 done
 
 if [[ ! -f "${MT5_LINUX_EXE}" ]]; then

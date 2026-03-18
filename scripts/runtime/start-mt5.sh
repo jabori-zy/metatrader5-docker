@@ -39,16 +39,11 @@ trap cleanup_startup_marker EXIT
 
 "${SCRIPT_DIR}/bootstrap-prefix.sh"
 
-if [[ ! -f "${MT5_LINUX_EXE}" ]]; then
-  log "MT5 not detected, running first-time installation"
-  /scripts/build/install-mt5.sh || fail "MT5 first-time installation failed, check ${MT5_LOG_FILE}"
-fi
+log "running MT5 installation"
+/scripts/build/install-mt5.sh || fail "MT5 first-time installation failed, check ${MT5_LOG_FILE}"
 
-PYTHON_EXE="$(find_windows_python || true)"
-if [[ -z "${PYTHON_EXE}" ]]; then
-  log "Windows Python not detected, running first-time installation"
-  /scripts/build/install-python.sh || fail "Windows Python first-time installation failed, check ${MT5_LOG_FILE}"
-fi
+log "running Windows Python installation"
+/scripts/build/install-python.sh || fail "Windows Python first-time installation failed, check ${MT5_LOG_FILE}"
 
 [[ -f "${MT5_LINUX_EXE}" ]] || fail "terminal64.exe not found: ${MT5_LINUX_EXE}"
 
