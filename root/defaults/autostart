@@ -1,2 +1,1 @@
-/scripts/runtime/start-mt5.sh
-
+bash /scripts/runtime/start-mt5.sh
