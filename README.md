@@ -7,7 +7,7 @@
 - Docker 固定使用 `winehq-stable 10.0.0.0~bookworm-1`
 - 镜像构建期预下载 Wine Gecko / Wine Mono
 - 镜像构建期预下载 MT5 和 Python 安装器
-- 首次容器启动时在 KasmVNC 中启动 MT5 安装器 GUI
+- 首次容器启动时自动安装 MT5
 - 首次容器启动时自动安装 Windows Python 3.14
 - 后续启动只复用已有前缀并启动 MT5
 
@@ -56,8 +56,8 @@ http://<ec2-public-ip>:3000
   - Wine Gecko
   - Wine Mono
 - 首次启动容器时，会在 `/config/.wine` 内初始化 Wine 前缀
-- 首次启动容器时，会在 KasmVNC 桌面中直接启动 `mt5setup.exe`，流程与之前在 EC2 裸机上测试的 `wine ~/mt5setup.exe` 保持一致
-- 完成 MT5 图形安装后，脚本才会继续安装 Windows Python 3.14
+- 首次启动容器时，会自动执行 `mt5setup.exe /auto`
+- 完成 MT5 无人值守安装后，脚本才会继续安装 Windows Python 3.14
 - 如果 `/config/.wine` 已存在，则会复用该前缀并跳过已完成的安装步骤
 - 启动脚本会直接运行：
 
@@ -129,5 +129,4 @@ docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdep
 - KasmVNC 基础认证只适合开发/测试环境，不建议直接裸露到公网
 - 首次启动主要耗时来自 Wine 前缀初始化和离线安装步骤
 - 虽然镜像内已经预下载 `mt5setup.exe`，但它仍是官方引导安装器，安装阶段依然可能联网下载 MT5 主体
-- 首次安装时请通过 KasmVNC 完成 MT5 图形安装向导
 - 如果离线安装资源缺失，启动脚本会直接报错，不会静默回退到网络下载
