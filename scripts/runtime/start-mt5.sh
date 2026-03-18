@@ -37,13 +37,21 @@ exec > >(tee -a "${MT5_LOG_FILE}") 2>&1
 touch "${STARTUP_MARKER}" || fail "failed to create startup marker: ${STARTUP_MARKER}"
 trap cleanup_startup_marker EXIT
 
+TOTAL_START_TIME=$SECONDS
+
 "${SCRIPT_DIR}/bootstrap-prefix.sh"
 
 log "running MT5 installation"
+MT5_INSTALL_START=$SECONDS
 /scripts/build/install-mt5.sh || fail "MT5 first-time installation failed, check ${MT5_LOG_FILE}"
+MT5_INSTALL_DURATION=$((SECONDS - MT5_INSTALL_START))
+log "MT5 installation completed in ${MT5_INSTALL_DURATION}s"
 
 log "running Windows Python installation"
+PYTHON_INSTALL_START=$SECONDS
 /scripts/build/install-python.sh || fail "Windows Python first-time installation failed, check ${MT5_LOG_FILE}"
+PYTHON_INSTALL_DURATION=$((SECONDS - PYTHON_INSTALL_START))
+log "Windows Python installation completed in ${PYTHON_INSTALL_DURATION}s"
 
 [[ -f "${MT5_LINUX_EXE}" ]] || fail "terminal64.exe not found: ${MT5_LINUX_EXE}"
 
@@ -54,7 +62,9 @@ MT5_PID=$!
 
 for _ in $(seq 1 30); do
   if pgrep -fa terminal64.exe >/dev/null; then
+    TOTAL_DURATION=$((SECONDS - TOTAL_START_TIME))
     log "MetaTrader 5 started"
+    log "startup summary: mt5_install=${MT5_INSTALL_DURATION}s, python_install=${PYTHON_INSTALL_DURATION}s, total=${TOTAL_DURATION}s"
     cleanup_startup_marker
     wait "${MT5_PID}"
     exit $?
