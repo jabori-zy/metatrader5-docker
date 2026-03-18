@@ -32,11 +32,28 @@ wait_for_wineserver() {
   sleep 2
 }
 
+find_windows_python() {
+  local preferred_32="${WINEPREFIX}/drive_c/Program Files (x86)/Python314-32/python.exe"
+  local preferred="${WINEPREFIX}/drive_c/Program Files/Python314/python.exe"
+
+  if [[ -f "${preferred_32}" ]]; then
+    printf '%s\n' "${preferred_32}"
+    return
+  fi
+
+  if [[ -f "${preferred}" ]]; then
+    printf '%s\n' "${preferred}"
+    return
+  fi
+
+  find "${WINEPREFIX}/drive_c" -type f \( -path '*/Program Files*/Python314*/python.exe' -o -path '*/Program Files*/Python*/python.exe' \) | sort | head -n 1
+}
+
 BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/config/.wine}}"
 MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 WINE_GECKO_DIR="${WINE_GECKO_DIR:-/opt/wine-offline/gecko}"
 WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"
-PYTHON_INSTALLER="${MT5_INSTALLER_DIR}/python-3.9.13.exe"
+PYTHON_INSTALLER="${MT5_INSTALLER_DIR}/python-3.14.0.exe"
 
 export WINEPREFIX="${BUILD_WINEPREFIX}"
 export WINEDEBUG="${WINEDEBUG:--all}"
@@ -63,12 +80,13 @@ run_gui wine "${PYTHON_INSTALLER}" /quiet InstallAllUsers=1 PrependPath=1 Includ
 }
 wait_for_wineserver
 
-PYTHON_LINUX_EXE="$(find "${WINEPREFIX}/drive_c" -type f -path '*/Python*/python.exe' | sort | head -n 1)"
+PYTHON_LINUX_EXE="$(find_windows_python || true)"
 [[ -n "${PYTHON_LINUX_EXE}" ]] || fail "未找到已安装的 python.exe"
 PYTHON_WIN_EXE="$(winepath -w "${PYTHON_LINUX_EXE}")"
+log "检测到 Windows Python: ${PYTHON_LINUX_EXE}"
 
 log "验证 Windows Python 版本"
-run_gui wine "${PYTHON_WIN_EXE}" --version >/tmp/python-version.log 2>&1 || {
+run_gui wine python --version >/tmp/python-version.log 2>&1 || {
   cat /tmp/python-version.log >&2
   fail "Python 版本检查失败"
 }

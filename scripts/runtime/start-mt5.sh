@@ -26,7 +26,13 @@ MT5_LOG_FILE="${MT5_LOG_DIR}/mt5.log"
 PYTHON_MARKER=""
 
 if [[ -d "${WINEPREFIX}/drive_c" ]]; then
-  PYTHON_MARKER="$(find "${WINEPREFIX}/drive_c" -type f -path '*/Python*/python.exe' | sort | head -n 1 || true)"
+  if [[ -f "${WINEPREFIX}/drive_c/Program Files (x86)/Python314-32/python.exe" ]]; then
+    PYTHON_MARKER="${WINEPREFIX}/drive_c/Program Files (x86)/Python314-32/python.exe"
+  elif [[ -f "${WINEPREFIX}/drive_c/Program Files/Python314/python.exe" ]]; then
+    PYTHON_MARKER="${WINEPREFIX}/drive_c/Program Files/Python314/python.exe"
+  else
+    PYTHON_MARKER="$(find "${WINEPREFIX}/drive_c" -type f \( -path '*/Program Files*/Python314*/python.exe' -o -path '*/Program Files*/Python*/python.exe' \) | sort | head -n 1 || true)"
+  fi
 fi
 
 mkdir -p "${MT5_LOG_DIR}" || fail "无法创建日志目录: ${MT5_LOG_DIR}"
