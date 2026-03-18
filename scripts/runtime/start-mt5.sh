@@ -44,6 +44,12 @@ if [[ ! -f "${MT5_LINUX_EXE}" ]]; then
   /scripts/build/install-mt5.sh || fail "MT5 first-time installation failed, check ${MT5_LOG_FILE}"
 fi
 
+PYTHON_EXE="$(find_windows_python || true)"
+if [[ -z "${PYTHON_EXE}" ]]; then
+  log "Windows Python not detected, running first-time installation"
+  /scripts/build/install-python.sh || fail "Windows Python first-time installation failed, check ${MT5_LOG_FILE}"
+fi
+
 [[ -f "${MT5_LINUX_EXE}" ]] || fail "terminal64.exe not found: ${MT5_LINUX_EXE}"
 
 log "starting MetaTrader 5"

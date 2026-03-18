@@ -2,6 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+source "${SCRIPT_DIR}/../lib/common.sh"
 
 log() {
   printf '[build][preinstall] %s\n' "$*"
@@ -23,16 +25,21 @@ export GST_PLUGIN_SYSTEM_PATH_1_0="${GST_PLUGIN_SYSTEM_PATH_1_0:-}"
 export GST_PLUGIN_PATH_1_0="${GST_PLUGIN_PATH_1_0:-}"
 export GST_REGISTRY="${GST_REGISTRY:-/tmp/gstreamer-registry.dat}"
 
+command -v wine >/dev/null 2>&1 || fail "wine is not installed"
+
 mkdir -p "$(dirname "${WINEPREFIX}")"
 rm -rf "${WINEPREFIX}"
 
 log "downloading offline assets"
 "${SCRIPT_DIR}/download-offline-assets.sh"
 
-log "installing Windows Python into ${WINEPREFIX}"
-"${SCRIPT_DIR}/install-python.sh"
+log "initializing base Wine prefix ${WINEPREFIX}"
+run_gui wineboot -u >/tmp/preinstall-wineboot.log 2>&1 || {
+  cat /tmp/preinstall-wineboot.log >&2
+  fail "base Wine prefix initialization failed"
+}
+wait_for_wineserver
 
-PYTHON_EXE="$(find "${WINEPREFIX}/drive_c" -type f -path '*/Program Files*/Python*/python.exe' | sort | head -n 1 || true)"
-[[ -n "${PYTHON_EXE}" ]] || fail "python.exe not found after preinstall"
+[[ -d "${WINEPREFIX}/drive_c" ]] || fail "drive_c not found after base prefix initialization"
 
 log "preinstalled runtime is ready"

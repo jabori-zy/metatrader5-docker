@@ -3,8 +3,8 @@
 一个单用户、无状态、启动时安装 MT5 的 MetaTrader 5 容器镜像：
 
 - 1 用户 = 1 容器 = 1 Wine prefix = 1 MT5 = 1 KasmVNC 会话
-- Wine、Windows Python 和 `MetaTrader5` Python 包在镜像构建期预装
-- MT5 在容器首次启动时安装到镜像内预准备好的 Wine prefix
+- Wine 和离线安装资源在镜像构建期准备
+- MT5、Windows Python 和 `MetaTrader5` Python 包在容器首次启动时安装到镜像内预准备好的 Wine prefix
 - 运行期不再挂载或持久化 Wine prefix
 - 容器删除后，本地运行时数据、缓存和日志都会丢失
 - 用户登录信息、业务配置等应由外部数据库或调度层管理
@@ -48,7 +48,7 @@ http://<ec2-public-ip>:3000
 
 - 预装基础 Wine prefix 固定在镜像内的 `/opt/mt5-prefix`
 - 容器启动时如果未检测到 `terminal64.exe`，会执行 MT5 首次安装
-- Windows Python 和 `MetaTrader5` Python 包在构建期已经预装到同一个 prefix
+- MT5 安装完成后，如果未检测到 Windows Python，会继续安装 Windows Python 和 `MetaTrader5` Python 包
 - 启动脚本会直接运行：
 
 ```text
@@ -66,6 +66,7 @@ wine "C:\Program Files\MetaTrader 5\terminal64.exe" /portable
 - 正确方式是在同一台 Docker 主机上运行多个此类容器
 - 每个容器承载一个用户实例
 - 由于基础环境已预装到镜像层，多容器会共享镜像层；每个容器仍会在首次启动时各自完成 MT5 安装
+- 由于基础环境已预装到镜像层，多容器会共享镜像层；每个容器仍会在首次启动时各自完成 MT5 和 Python 安装
 
 ## 常用命令
 
@@ -136,6 +137,7 @@ docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdep
 ## 注意事项
 
 - 构建期会完成环境和 Python 预装，因此镜像构建时间更长，镜像体积也更大
+- 构建期只准备 Wine、基础前缀和离线安装资源；MT5 和 Python 安装发生在首次启动
 - `mt5setup.exe` 仍然是官方引导安装器，首次启动安装 MT5 时依然可能联网下载 MT5 主体
 - 运行时不持久化本地数据，因此容器重建后不会保留运行期产生的文件
 - `docker-compose.yml` 只是本地单实例 demo；生产环境应由外部编排系统按用户拉起多个容器

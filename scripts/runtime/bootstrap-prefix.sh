@@ -19,8 +19,6 @@ RUNTIME_WINEPREFIX="/opt/mt5-prefix"
 export WINEPREFIX="${RUNTIME_WINEPREFIX}"
 
 [[ -d "${RUNTIME_WINEPREFIX}" ]] || fail "preinstalled Wine prefix does not exist: ${RUNTIME_WINEPREFIX}"
-
-PYTHON_EXE="$(find_windows_python || true)"
-[[ -n "${PYTHON_EXE}" ]] || fail "Windows Python was not found in preinstalled prefix"
+[[ -d "${RUNTIME_WINEPREFIX}/drive_c" ]] || fail "preinstalled drive_c does not exist: ${RUNTIME_WINEPREFIX}/drive_c"
 
 log "preinstalled Wine prefix is ready"
