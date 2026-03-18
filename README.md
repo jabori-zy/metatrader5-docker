@@ -56,6 +56,7 @@ http://<ec2-public-ip>:3000
   - Wine Gecko
   - Wine Mono
 - 首次启动容器时，会在 `/config/.wine` 内初始化 Wine 前缀
+- 首次启动容器时，会先设置 Wine 为 Windows 10 并显式安装 Wine Mono
 - 首次启动容器时，会自动执行 `mt5setup.exe /auto`
 - 完成 MT5 无人值守安装后，脚本才会继续安装 Windows Python 3.14
 - 如果 `/config/.wine` 已存在，则会复用该前缀并跳过已完成的安装步骤

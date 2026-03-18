@@ -52,6 +52,8 @@ WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"
 MT5_INSTALL_TIMEOUT="${MT5_INSTALL_TIMEOUT:-600}"
 MT5_LINUX_EXE="${BUILD_WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe"
 MT5_INSTALLER="${MT5_INSTALLER_DIR}/mt5setup.exe"
+MONO_MARKER_DIR="${BUILD_WINEPREFIX}/drive_c/windows/mono"
+MONO_INSTALLER="$(find "${WINE_MONO_DIR}" -maxdepth 1 -type f -name 'wine-mono-*.msi' | sort | head -n 1 || true)"
 
 export WINEPREFIX="${BUILD_WINEPREFIX}"
 export WINEDEBUG="${WINEDEBUG:--all}"
@@ -69,23 +71,35 @@ mkdir -p "$(dirname "${WINEPREFIX}")"
 [[ -f "${MT5_INSTALLER}" ]] || fail "缺少预下载 MT5 安装器: ${MT5_INSTALLER}"
 [[ -d "${WINE_GECKO_DIR}" ]] || fail "缺少 Gecko 离线目录: ${WINE_GECKO_DIR}"
 [[ -d "${WINE_MONO_DIR}" ]] || fail "缺少 Mono 离线目录: ${WINE_MONO_DIR}"
+[[ -n "${MONO_INSTALLER}" ]] || fail "缺少 Mono 安装器: ${WINE_MONO_DIR}"
 
 if [[ ! -f "${WINEPREFIX}/system.reg" ]]; then
   log "初始化 Wine 前缀 ${WINEPREFIX}"
   rm -rf "${WINEPREFIX}"
-  run_gui winecfg -v=win11 >/tmp/mt5-winecfg-init.log 2>&1 || {
+  run_gui winecfg -v=win10 >/tmp/mt5-winecfg-init.log 2>&1 || {
     cat /tmp/mt5-winecfg-init.log >&2
     fail "winecfg 初始化失败"
   }
   wait_for_wineserver
 fi
 
-log "设置 Wine 为 Windows 11 模式"
-run_gui winecfg -v=win11 >/tmp/mt5-winver.log 2>&1 || {
+log "设置 Wine 为 Windows 10 模式"
+run_gui winecfg -v=win10 >/tmp/mt5-winver.log 2>&1 || {
   cat /tmp/mt5-winver.log >&2
   fail "设置 Wine Windows 版本失败"
 }
 wait_for_wineserver
+
+if [[ ! -d "${MONO_MARKER_DIR}" ]]; then
+  log "安装 Wine Mono"
+  run_gui wine msiexec /i "${MONO_INSTALLER}" /qn >/tmp/mt5-mono.log 2>&1 || {
+    cat /tmp/mt5-mono.log >&2
+    fail "Wine Mono 安装失败"
+  }
+  wait_for_wineserver
+else
+  log "Wine Mono 已安装，跳过"
+fi
 
 log "执行 MT5 无人值守安装"
 log "注意: mt5setup.exe 是引导安装器，仍可能联网下载 MT5 主体"
