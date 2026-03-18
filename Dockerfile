@@ -2,7 +2,7 @@ ARG BUILD_DATE
 ARG VERSION=dev
 ARG MT5_SETUP_URL="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
 ARG PYTHON_SETUP_URL="https://www.python.org/ftp/python/3.14.0/python-3.14.0-amd64.exe"
-ARG WINE_CHANNEL=staging
+ARG WINE_VERSION=10.0.0.0~bookworm-1
 
 FROM ghcr.io/linuxserver/baseimage-kasmvnc:debianbookworm
 
@@ -10,7 +10,7 @@ ARG BUILD_DATE
 ARG VERSION
 ARG MT5_SETUP_URL
 ARG PYTHON_SETUP_URL
-ARG WINE_CHANNEL
+ARG WINE_VERSION
 
 LABEL org.opencontainers.image.title="metatrader5-docker"
 LABEL org.opencontainers.image.description="MetaTrader 5 with Wine and KasmVNC"
@@ -57,7 +57,11 @@ RUN dpkg --add-architecture i386 \
     && wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
     && wget -O /etc/apt/sources.list.d/winehq-bookworm.sources https://dl.winehq.org/wine-builds/debian/dists/bookworm/winehq-bookworm.sources \
     && apt-get update \
-    && apt-get install -y --install-recommends "winehq-${WINE_CHANNEL}" \
+    && apt-get install -y --install-recommends \
+        "winehq-stable=${WINE_VERSION}" \
+        "wine-stable=${WINE_VERSION}" \
+        "wine-stable-amd64=${WINE_VERSION}" \
+        "wine-stable-i386:i386=${WINE_VERSION}" \
     && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen \
     && mkdir -p /opt/installers /opt/wine-offline/gecko /opt/wine-offline/mono /config \

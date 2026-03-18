@@ -4,7 +4,7 @@
 
 - Wine 进镜像
 - KasmVNC 提供浏览器桌面
-- Docker 默认使用 `winehq-staging`
+- Docker 固定使用 `winehq-stable 10.0.0.0~bookworm-1`
 - 镜像构建期预下载 Wine Gecko / Wine Mono
 - 镜像构建期预下载 MT5 和 Python 安装器
 - 首次容器启动时在 KasmVNC 中启动 MT5 安装器 GUI
@@ -49,7 +49,7 @@ http://<ec2-public-ip>:3000
 ## 运行行为
 
 - 镜像构建阶段只安装 Wine 和运行依赖
-- 镜像构建阶段默认安装 `winehq-staging`
+- 镜像构建阶段固定安装 `winehq-stable 10.0.0.0~bookworm-1`
 - 镜像构建阶段还会预下载：
   - `mt5setup.exe`
   - `python-3.14.0-amd64.exe`
