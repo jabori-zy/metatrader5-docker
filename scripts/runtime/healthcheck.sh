@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WINEPREFIX="/opt/mt5-prefix"
+WINEPREFIX="/config/.wine"
 MT5_LINUX_EXE="${WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe"
 STARTUP_MARKER="/config/.mt5-startup-in-progress"
 

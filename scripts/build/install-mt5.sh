@@ -14,7 +14,7 @@ fail() {
   exit 1
 }
 
-BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/opt/mt5-prefix}}"
+BUILD_WINEPREFIX="${BUILD_WINEPREFIX:-${WINEPREFIX:-/config/.wine}}"
 MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 WINE_GECKO_DIR="${WINE_GECKO_DIR:-/opt/wine-offline/gecko}"
 WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"

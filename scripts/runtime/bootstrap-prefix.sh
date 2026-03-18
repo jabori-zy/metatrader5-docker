@@ -14,11 +14,15 @@ fail() {
   exit 1
 }
 
-RUNTIME_WINEPREFIX="/opt/mt5-prefix"
+RUNTIME_WINEPREFIX="/config/.wine"
 
 export WINEPREFIX="${RUNTIME_WINEPREFIX}"
 
-[[ -d "${RUNTIME_WINEPREFIX}" ]] || fail "preinstalled Wine prefix does not exist: ${RUNTIME_WINEPREFIX}"
-[[ -d "${RUNTIME_WINEPREFIX}/drive_c" ]] || fail "preinstalled drive_c does not exist: ${RUNTIME_WINEPREFIX}/drive_c"
+mkdir -p /config || fail "failed to create /config"
+mkdir -p "$(dirname "${RUNTIME_WINEPREFIX}")" || fail "failed to prepare Wine prefix parent directory"
 
-log "preinstalled Wine prefix is ready"
+if [[ -d "${RUNTIME_WINEPREFIX}" ]]; then
+  log "runtime Wine prefix already exists"
+else
+  log "runtime Wine prefix will be initialized on first install"
+fi

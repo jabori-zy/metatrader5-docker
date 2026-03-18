@@ -24,8 +24,7 @@ ENV TITLE=MetaTrader5 \
     WINEDEBUG=-all \
     WINEARCH=win64 \
     WINEDLLOVERRIDES=winemenubuilder.exe=d \
-    WINEPREFIX=/opt/mt5-prefix \
-    PREINSTALLED_WINEPREFIX=/opt/mt5-prefix \
+    WINEPREFIX=/config/.wine \
     MT5_INSTALLER_DIR=/opt/installers \
     WINE_GECKO_DIR=/opt/wine-offline/gecko \
     WINE_MONO_DIR=/opt/wine-offline/mono \
@@ -65,7 +64,7 @@ RUN dpkg --add-architecture i386 \
         "wine-stable-i386:i386=${WINE_VERSION}" \
     && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen \
-    && mkdir -p /opt/installers /opt/wine-offline/gecko /opt/wine-offline/mono /opt/mt5-prefix /config \
+    && mkdir -p /opt/installers /opt/wine-offline/gecko /opt/wine-offline/mono /config \
     && mkdir -p /usr/share/wine \
     && rm -rf /usr/share/wine/gecko /usr/share/wine/mono \
     && ln -sfn /opt/wine-offline/gecko /usr/share/wine/gecko \
