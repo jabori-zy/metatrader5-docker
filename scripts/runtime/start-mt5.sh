@@ -21,7 +21,12 @@ export MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 MT5_LINUX_EXE="${WINEPREFIX}/drive_c/Program Files/MetaTrader 5/terminal64.exe"
 MT5_LOG_DIR="/config/logs"
 MT5_LOG_FILE="${MT5_LOG_DIR}/mt5.log"
+STARTUP_MARKER="/config/.mt5-startup-in-progress"
 PYTHON_MARKER=""
+
+cleanup_startup_marker() {
+  rm -f "${STARTUP_MARKER}"
+}
 
 if [[ -d "${WINEPREFIX}/drive_c" ]]; then
   if [[ -f "${WINEPREFIX}/drive_c/Program Files/Python39/python.exe" ]]; then
@@ -36,6 +41,9 @@ fi
 mkdir -p "${MT5_LOG_DIR}" || fail "无法创建日志目录: ${MT5_LOG_DIR}"
 touch "${MT5_LOG_FILE}" || fail "无法创建日志文件: ${MT5_LOG_FILE}"
 exec > >(tee -a "${MT5_LOG_FILE}") 2>&1
+
+touch "${STARTUP_MARKER}" || fail "无法创建启动标记: ${STARTUP_MARKER}"
+trap cleanup_startup_marker EXIT
 
 "${SCRIPT_DIR}/bootstrap-prefix.sh"
 
@@ -59,6 +67,7 @@ MT5_PID=$!
 for _ in $(seq 1 30); do
   if pgrep -fa terminal64.exe >/dev/null; then
     log "MetaTrader 5 已启动"
+    cleanup_startup_marker
     wait "${MT5_PID}"
     exit $?
   fi
