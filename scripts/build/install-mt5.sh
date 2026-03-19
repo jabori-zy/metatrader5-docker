@@ -50,14 +50,14 @@ if [[ ! -f "${WINEPREFIX}/system.reg" ]]; then
     fail "winecfg initialization failed"
   }
   wait_for_wineserver
+else
+  log "setting Wine to Windows 10 mode"
+  run_gui winecfg -v=win10 >/tmp/mt5-winver.log 2>&1 || {
+    cat /tmp/mt5-winver.log >&2
+    fail "failed to set Wine Windows version"
+  }
+  wait_for_wineserver
 fi
-
-log "setting Wine to Windows 10 mode"
-run_gui winecfg -v=win10 >/tmp/mt5-winver.log 2>&1 || {
-  cat /tmp/mt5-winver.log >&2
-  fail "failed to set Wine Windows version"
-}
-wait_for_wineserver
 
 if [[ ! -d "${MONO_MARKER_DIR}" ]]; then
   log "installing Wine Mono"

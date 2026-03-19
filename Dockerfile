@@ -80,6 +80,7 @@ COPY --chmod=755 scripts/build/preinstall-runtime.sh /scripts/build/preinstall-r
 RUN /scripts/build/preinstall-runtime.sh
 
 COPY --chmod=755 scripts/runtime/bootstrap-prefix.sh /scripts/runtime/bootstrap-prefix.sh
+COPY --chmod=755 scripts/runtime/launch-mt5.sh /scripts/runtime/launch-mt5.sh
 COPY --chmod=755 scripts/runtime/start-mt5.sh /scripts/runtime/start-mt5.sh
 COPY --chmod=755 scripts/runtime/healthcheck.sh /scripts/runtime/healthcheck.sh
 COPY root /
@@ -90,6 +91,7 @@ RUN chmod 755 /scripts /scripts/build /scripts/runtime /scripts/lib \
         /scripts/build/install-python.sh \
         /scripts/build/preinstall-runtime.sh \
         /scripts/runtime/bootstrap-prefix.sh \
+        /scripts/runtime/launch-mt5.sh \
         /scripts/runtime/start-mt5.sh \
         /scripts/runtime/healthcheck.sh \
     && chmod 644 /scripts/lib/common.sh

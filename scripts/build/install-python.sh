@@ -57,12 +57,6 @@ run_gui wine python --version >/tmp/python-version.log 2>&1 || {
 }
 cat /tmp/python-version.log
 
-log "upgrading pip"
-run_gui wine "${PYTHON_WIN_EXE}" -m pip install --upgrade pip >/tmp/python-pip-upgrade.log 2>&1 || {
-  cat /tmp/python-pip-upgrade.log >&2
-  fail "pip upgrade failed"
-}
-
 log "installing MetaTrader5 Python package"
 run_gui wine "${PYTHON_WIN_EXE}" -m pip install MetaTrader5 >/tmp/python-mt5-pkg.log 2>&1 || {
   cat /tmp/python-mt5-pkg.log >&2
