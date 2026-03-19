@@ -38,7 +38,9 @@ MT5_INSTALLER_DIR="${MT5_INSTALLER_DIR:-/opt/installers}"
 WINE_GECKO_DIR="${WINE_GECKO_DIR:-/opt/wine-offline/gecko}"
 WINE_MONO_DIR="${WINE_MONO_DIR:-/opt/wine-offline/mono}"
 MT5_SETUP_URL="${MT5_SETUP_URL:-https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe}"
-PYTHON_SETUP_URL="${PYTHON_SETUP_URL:-https://www.python.org/ftp/python/3.9.13/python-3.9.13-amd64.exe}"
+PYTHON_VERSION="${PYTHON_VERSION:-3.9.13}"
+PYTHON_SETUP_URL="${PYTHON_SETUP_URL:-https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe}"
+PYTHON_INSTALLER_NAME="$(basename "${PYTHON_SETUP_URL}")"
 
 mkdir -p "$MT5_INSTALLER_DIR" "$WINE_GECKO_DIR" "$WINE_MONO_DIR"
 
@@ -54,7 +56,7 @@ log "Gecko version: $GECKO_VER"
 log "Mono version: $MONO_VER"
 
 download_file "$MT5_SETUP_URL" "$MT5_INSTALLER_DIR/mt5setup.exe"
-download_file "$PYTHON_SETUP_URL" "$MT5_INSTALLER_DIR/python-3.9.13-amd64.exe"
+download_file "$PYTHON_SETUP_URL" "$MT5_INSTALLER_DIR/${PYTHON_INSTALLER_NAME}"
 download_file "https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${GECKO_VER}-x86.msi" \
   "$WINE_GECKO_DIR/wine-gecko-${GECKO_VER}-x86.msi"
 download_file "https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${GECKO_VER}-x86_64.msi" \

@@ -1,7 +1,7 @@
 ARG BUILD_DATE
 ARG VERSION=dev
 ARG MT5_SETUP_URL="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
-ARG PYTHON_VERSION=3.10.0
+ARG PYTHON_VERSION=3.9.13
 ARG PYTHON_SETUP_URL="https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe"
 ARG WINE_VERSION=10.0.0.0~bookworm-1
 
@@ -31,6 +31,7 @@ ENV TITLE=MetaTrader5 \
     WINE_GECKO_DIR=/opt/wine-offline/gecko \
     WINE_MONO_DIR=/opt/wine-offline/mono \
     MT5_SETUP_URL=${MT5_SETUP_URL} \
+    PYTHON_VERSION=${PYTHON_VERSION} \
     PYTHON_SETUP_URL=${PYTHON_SETUP_URL} \
     MT5_CMD_OPTIONS=
 

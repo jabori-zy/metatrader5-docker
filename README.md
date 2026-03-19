@@ -24,6 +24,8 @@
 cp .env.example .env
 ```
 
+如需切换 Windows Python 版本，可在 `.env` 中修改 `PYTHON_VERSION`。
+
 2. 构建镜像：
 
 ```bash
@@ -136,7 +138,7 @@ docker compose exec mt5 bash -lc 'find /opt/installers /opt/wine-offline -maxdep
 
 ## 注意事项
 
-- 构建期会完成环境和 Python 预装，因此镜像构建时间更长，镜像体积也更大
+- 可通过 `PYTHON_VERSION` 调整下载和安装的 Windows Python 版本；安装器文件名和解释器路径会随版本联动
 - 构建期只准备 Wine 和离线安装资源；Wine prefix、MT5 和 Python 安装都发生在首次启动
 - `mt5setup.exe` 仍然是官方引导安装器，首次启动安装 MT5 时依然可能联网下载 MT5 主体
 - 运行时不持久化本地数据，因此容器重建后不会保留运行期产生的文件
