@@ -1,7 +1,7 @@
 ARG BUILD_DATE
 ARG VERSION=dev
 ARG MT5_SETUP_URL="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
-ARG PYTHON_VERSION=3.14.3
+ARG PYTHON_VERSION=3.13.2
 ARG PYTHON_SETUP_URL="https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe"
 ARG WINE_VERSION=10.0.0.0~bookworm-1
 
