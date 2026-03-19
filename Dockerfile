@@ -1,7 +1,8 @@
 ARG BUILD_DATE
 ARG VERSION=dev
 ARG MT5_SETUP_URL="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/mt5setup.exe"
-ARG PYTHON_SETUP_URL="https://www.python.org/ftp/python/3.9.13/python-3.9.13-amd64.exe"
+ARG PYTHON_VERSION=3.14.3
+ARG PYTHON_SETUP_URL="https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-amd64.exe"
 ARG WINE_VERSION=10.0.0.0~bookworm-1
 
 FROM ghcr.io/linuxserver/baseimage-kasmvnc:debianbookworm
@@ -9,6 +10,7 @@ FROM ghcr.io/linuxserver/baseimage-kasmvnc:debianbookworm
 ARG BUILD_DATE
 ARG VERSION
 ARG MT5_SETUP_URL
+ARG PYTHON_VERSION
 ARG PYTHON_SETUP_URL
 ARG WINE_VERSION
 
